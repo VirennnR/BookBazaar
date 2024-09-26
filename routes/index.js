@@ -88,6 +88,34 @@ router.get('/gist/:id', async (req, res) => {
     }
 });
 
+// Define a new route for dictionary-like meanings
+router.get('/dictionary', async (req, res) => {
+    try {
+        const { text } = req.query;  // Get the text from URL parameters
+
+        if (!text || text.trim().length === 0) {
+            return res.status(400).json({ message: "Please provide valid text input." });
+        }
+
+        const prompt = `Provide a clear and concise dictionary-like definition of the following word or phrase: "${text}". Ensure the explanation is easy to understand and no longer than 2-3 sentences.`;
+
+        // Generate content using the AI model
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const definition = await response.text();
+
+        const cleanDefinition = definition
+            .replace(/\*\*/g, '')
+            .replace(/\n/g, ' ')
+            .replace(/\\\\/g, '\\')
+            .replace(/\\"/g, '"');
+
+        res.json({ definition: cleanDefinition.trim() });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Genre Routes
 router.post('/genres', upload.single('image'), async (req, res) => {
     try {
